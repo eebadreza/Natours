@@ -20,10 +20,10 @@ const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 const app = express();
 
 app.use(
-  cors({
-    credentials: true,
-    origin: true,
-  })
+    cors({
+        credentials: true,
+        origin: 'https://natours-866t.onrender.com/',
+    })
 );
 
 app.set('view engine', 'pug');
@@ -46,14 +46,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+    app.use(morgan('dev'));
 }
 
 // Limit Requests from same IP
 const limiter = rateLimit({
-  max: 1000,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in a hour!',
+    max: 1000,
+    windowMs: 60 * 60 * 1000,
+    message: 'Too many requests from this IP, please try again in a hour!',
 });
 
 app.use('/api', limiter);
@@ -72,23 +72,23 @@ app.use(xss());
 
 // Prevent parameter pollution
 app.use(
-  hpp({
-    whitelist: [
-      'duration',
-      'ratingQuantity',
-      'ratingAverage',
-      'maxGroupSize',
-      'difficulty',
-      'price',
-    ],
-  })
+    hpp({
+        whitelist: [
+            'duration',
+            'ratingQuantity',
+            'ratingAverage',
+            'maxGroupSize',
+            'difficulty',
+            'price',
+        ],
+    })
 );
 
 // Test middleware
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.cookies);
-  next();
+    req.requestTime = new Date().toISOString();
+    // console.log(req.cookies);
+    next();
 });
 
 // Routes
@@ -100,7 +100,7 @@ app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
 
 app.all('*', (req, res, next) => {
-  next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
+    next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
 });
 
 app.use(globalErrorHandeler);
