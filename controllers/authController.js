@@ -5,7 +5,6 @@ const AppError = require('../utils/appError');
 const User = require('./../models/userModels');
 const catchAsync = require('./../utils/catchAsync');
 const Email = require('./../utils/email');
-const { url } = require('inspector');
 
 // Synchronous sign method used ??
 const signToken = (id) => {
@@ -14,19 +13,17 @@ const signToken = (id) => {
     });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
     const token = signToken(user._id);
 
     const cookieOptions = {
         expires: new Date(
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
-        httpOnly: true, // can't manipulate cookie any way
+        httpOnly: true, // cookie cannot be accessed or modified in any way by the browser
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
     };
 
-    if (process.env.NODE_ENV === 'production') {
-        cookieOptions.secure = true;
-    }
     // Remove the password
     user.password = undefined;
 
@@ -53,7 +50,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     const url = `${req.protocol}://${req.get('host')}/me`;
     await new Email(newUser, url).sendWelocome();
 
-    createSendToken(newUser, 201, res);
+    createSendToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -72,7 +69,7 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError('Incorrect Email or Password', 401));
     }
 
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {
@@ -221,11 +218,13 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
         .createHash('sha256')
         .update(req.params.token)
         .digest('hex');
+
     // Get user based on the token
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetExpires: { $gt: Date.now() },
     });
+
     // If token not expired, and user exists, set new password
     if (!user) return next(new AppError('Token is Invalid or Expired', 400));
 
@@ -239,7 +238,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     // Update chaged password property for the user
     // Log the user in
 
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -258,5 +257,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     await user.save();
 
     // Log user in, send JWT
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
 });

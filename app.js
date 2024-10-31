@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const compression = require('compression');
 const cookieParser = require('cookie-parser');
 
 const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
@@ -19,30 +20,19 @@ const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 
 const app = express();
 
-app.use(
-    cors({
-        credentials: true,
-        origin: 'https://natours-866t.onrender.com/',
-    })
-);
+app.enable('trust proxy');
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // Global Middleware
+app.use(cors());
+app.options('*', cors());
+
 // Serving Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set Security HTTP headers
-// Further HELMET configuration for Security Policy (CSP)
-// const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
-// const styleSrcUrls = [
-//   'https://unpkg.com/',
-//   'https://tile.openstreetmap.org',
-//   'https://fonts.googleapis.com/',
-// ];
-// const connectSrcUrls = ['https://unpkg.com', 'https://tile.openstreetmap.org'];
-// const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+app.use(helmet());
 
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
@@ -60,7 +50,6 @@ app.use('/api', limiter);
 
 // Body parser, reading data from req.body
 app.use(express.json({ limit: '10kb' }));
-
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
@@ -84,6 +73,8 @@ app.use(
     })
 );
 
+app.use(compression());
+
 // Test middleware
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
@@ -92,7 +83,6 @@ app.use((req, res, next) => {
 });
 
 // Routes
-
 app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
@@ -104,5 +94,4 @@ app.all('*', (req, res, next) => {
 });
 
 app.use(globalErrorHandeler);
-
 module.exports = app;
