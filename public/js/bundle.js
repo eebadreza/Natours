@@ -2656,7 +2656,6 @@
       form2.append("name", document.getElementById("name").value);
       form2.append("email", document.getElementById("email").value);
       form2.append("photo", document.getElementById("photo").files[0]);
-      console.log(form2);
       updateSettings("data", form2);
     });
   }
