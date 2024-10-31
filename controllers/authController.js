@@ -22,6 +22,8 @@ const createSendToken = (user, statusCode, req, res) => {
         ),
         httpOnly: true, // cookie cannot be accessed or modified in any way by the browser
         secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+        sameSite: 'none',
+        domain: 'natours-866t.onrender.com',
     };
 
     // Remove the password
