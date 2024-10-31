@@ -40,7 +40,7 @@
         "validator": "^13.12.0"
     },
     "engines": {
-        "node": "20"
+        "node": ">=10"
     },
     "devDependencies": {
         "axios": "^1.7.7",
