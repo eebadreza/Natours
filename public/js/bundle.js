@@ -2535,7 +2535,7 @@
     try {
       const res = await axios_default({
         method: "POST",
-        url: "/api/v1/users/login",
+        url: "http://localhost:1234/api/v1/users/login",
         data: {
           email,
           password
@@ -2555,7 +2555,7 @@
     try {
       const res = await axios_default({
         method: "GET",
-        url: "/api/v1/users/logout"
+        url: "http://localhost:1234/api/v1/users/logout"
       });
       if (res.data.status === "success") {
         location.reload(true);
@@ -2600,7 +2600,7 @@
   // public/js/updateSettings.js
   var updateSettings = async (type, data) => {
     try {
-      const url = type === "data" ? "/api/v1/users/updateMe" : "/api/v1/users/updateMyPassword";
+      const url = type === "data" ? "http://localhost:1234/api/v1/users/updateMe" : "http://localhost:1234/api/v1/users/updateMyPassword";
       const res = await axios_default({
         method: "PATCH",
         url,
@@ -2656,6 +2656,7 @@
       form2.append("name", document.getElementById("name").value);
       form2.append("email", document.getElementById("email").value);
       form2.append("photo", document.getElementById("photo").files[0]);
+      console.log(form2);
       updateSettings("data", form2);
     });
   }

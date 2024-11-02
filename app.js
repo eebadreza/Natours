@@ -9,7 +9,6 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
-const compression = require('compression');
 const cookieParser = require('cookie-parser');
 
 const tourRouter = require(`${__dirname}/routes/tourRoutes.js`);
@@ -20,36 +19,48 @@ const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 
 const app = express();
 
-app.enable('trust proxy');
+app.use(
+  cors({
+    credentials: true,
+    origin: true,
+  })
+);
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 // Global Middleware
-app.use(cors());
-app.options('*', cors());
-
 // Serving Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(helmet());
+// Set Security HTTP headers
+// Further HELMET configuration for Security Policy (CSP)
+// const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
+// const styleSrcUrls = [
+//   'https://unpkg.com/',
+//   'https://tile.openstreetmap.org',
+//   'https://fonts.googleapis.com/',
+// ];
+// const connectSrcUrls = ['https://unpkg.com', 'https://tile.openstreetmap.org'];
+// const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
+  app.use(morgan('dev'));
 }
 
 // Limit Requests from same IP
 const limiter = rateLimit({
-    max: 1000,
-    windowMs: 60 * 60 * 1000,
-    message: 'Too many requests from this IP, please try again in a hour!',
+  max: 1000,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in a hour!',
 });
 
 app.use('/api', limiter);
 
 // Body parser, reading data from req.body
 app.use(express.json({ limit: '10kb' }));
+
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
@@ -61,28 +72,27 @@ app.use(xss());
 
 // Prevent parameter pollution
 app.use(
-    hpp({
-        whitelist: [
-            'duration',
-            'ratingQuantity',
-            'ratingAverage',
-            'maxGroupSize',
-            'difficulty',
-            'price',
-        ],
-    })
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingQuantity',
+      'ratingAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
 );
-
-app.use(compression());
 
 // Test middleware
 app.use((req, res, next) => {
-    req.requestTime = new Date().toISOString();
-    // console.log(req.cookies);
-    next();
+  req.requestTime = new Date().toISOString();
+  // console.log(req.cookies);
+  next();
 });
 
 // Routes
+
 app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
@@ -90,8 +100,9 @@ app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
 
 app.all('*', (req, res, next) => {
-    next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
+  next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
 });
 
 app.use(globalErrorHandeler);
+
 module.exports = app;
