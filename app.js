@@ -1,4 +1,3 @@
-var cors = require('cors');
 const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
@@ -19,13 +18,6 @@ const viewRouter = require(`${__dirname}/routes/viewRoutes.js`);
 
 const app = express();
 
-app.use(
-  cors({
-    credentials: true,
-    origin: true,
-  })
-);
-
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -33,27 +25,16 @@ app.set('views', path.join(__dirname, 'views'));
 // Serving Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set Security HTTP headers
-// Further HELMET configuration for Security Policy (CSP)
-// const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
-// const styleSrcUrls = [
-//   'https://unpkg.com/',
-//   'https://tile.openstreetmap.org',
-//   'https://fonts.googleapis.com/',
-// ];
-// const connectSrcUrls = ['https://unpkg.com', 'https://tile.openstreetmap.org'];
-// const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
-
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+    app.use(morgan('dev'));
 }
 
 // Limit Requests from same IP
 const limiter = rateLimit({
-  max: 1000,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in a hour!',
+    max: 1000,
+    windowMs: 60 * 60 * 1000,
+    message: 'Too many requests from this IP, please try again in a hour!',
 });
 
 app.use('/api', limiter);
@@ -72,23 +53,23 @@ app.use(xss());
 
 // Prevent parameter pollution
 app.use(
-  hpp({
-    whitelist: [
-      'duration',
-      'ratingQuantity',
-      'ratingAverage',
-      'maxGroupSize',
-      'difficulty',
-      'price',
-    ],
-  })
+    hpp({
+        whitelist: [
+            'duration',
+            'ratingQuantity',
+            'ratingAverage',
+            'maxGroupSize',
+            'difficulty',
+            'price',
+        ],
+    })
 );
 
 // Test middleware
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  // console.log(req.cookies);
-  next();
+    req.requestTime = new Date().toISOString();
+    // console.log(req.cookies);
+    next();
 });
 
 // Routes
@@ -100,7 +81,7 @@ app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
 
 app.all('*', (req, res, next) => {
-  next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
+    next(new appError(`Can't find the ${req.originalUrl} on this server`, 404));
 });
 
 app.use(globalErrorHandeler);
